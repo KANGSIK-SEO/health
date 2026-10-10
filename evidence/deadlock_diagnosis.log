@@ -1,0 +1,25 @@
+===== ps -ef | grep agent-leak-app (PID 존재 증거) =====
+kangsik+    5572    5329  0 21:36 ?        00:00:00 /home/kangsikseoul0852.guest/agent/agent-leak-app
+kangsik+    5574    5572  0 21:36 ?        00:00:00 /home/kangsikseoul0852.guest/agent/agent-leak-app
+
+===== ps -o (프로세스 상태/CPU/MEM 정체) =====
+    PID    PPID STAT     ELAPSED %CPU %MEM CMD
+   5572    5329 S          00:15  0.3  0.0 /home/kangsikseoul0852.guest/agent/agent-leak-app
+
+===== 워커 프로세스 스레드 (ps -L, futex 대기) =====
+    PID     TID STAT WCHAN                  %CPU COMMAND
+   5572    5572 S    do_wait                 0.3 agent-leak-app
+    PID     TID STAT WCHAN                  %CPU COMMAND
+   5574    5574 SNl  futex_wait_queue        0.2 agent-leak-app
+   5574    5582 SNl  futex_wait_queue        0.0 agent-leak-app
+   5574    5583 SNl  futex_wait_queue        0.0 agent-leak-app
+
+===== top -H -b -n1 (스레드별 CPU 0%) =====
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+   5572 kangsik+  20   0    2900   2160   1936 S   0.0   0.1   0:00.05 agent-l+
+
+===== /proc/<tid>/wchan (커널 대기 지점) =====
+pid 5572 tid 5572: wchan=do_wait
+pid 5574 tid 5574: wchan=futex_wait_queue
+pid 5574 tid 5582: wchan=futex_wait_queue
+pid 5574 tid 5583: wchan=futex_wait_queue
